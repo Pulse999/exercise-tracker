@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exercise Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 2rem;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    form, .users, .logs {
+      background: white;
+      padding: 1rem;
+      margin: 1rem auto;
+      max-width: 500px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+    input[type="text"], input[type="number"], input[type="date"] {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .response {
+      margin-top: 1rem;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>Exercise Tracker</h1>
+
+  <form id="user-form">
+    <h2>Create New User</h2>
+    <label>Username:
+      <input type="text" name="username" required />
+    </label>
+    <button type="submit">Create User</button>
+    <div class="response" id="user-response"></div>
+  </form>
+
+  <form id="exercise-form">
+    <h2>Add Exercise</h2>
+    <label>User ID:
+      <input type="text" name="_id" required />
+    </label>
+    <label>Description:
+      <input type="text" name="description" required />
+    </label>
+    <label>Duration (minutes):
+      <input type="number" name="duration" required />
+    </label>
+    <label>Date (optional):
+      <input type="date" name="date" />
+    </label>
+    <button type="submit">Add Exercise</button>
+    <div class="response" id="exercise-response"></div>
+  </form>
+
+  <form id="log-form">
+    <h2>Get Exercise Log</h2>
+    <label>User ID:
+      <input type="text" name="_id" required />
+    </label>
+    <label>From (yyyy-mm-dd):
+      <input type="date" name="from" />
+    </label>
+    <label>To (yyyy-mm-dd):
+      <input type="date" name="to" />
+    </label>
+    <label>Limit:
+      <input type="number" name="limit" />
+    </label>
+    <button type="submit">Get Logs</button>
+    <div class="response" id="log-response"></div>
+  </form>
+
+  <script>
+    const userForm = document.getElementById('user-form');
+    const exerciseForm = document.getElementById('exercise-form');
+    const logForm = document.getElementById('log-form');
+
+    userForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new URLSearchParams(new FormData(userForm));
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      document.getElementById('user-response').textContent = JSON.stringify(data, null, 2);
+    };
+
+    exerciseForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new URLSearchParams(new FormData(exerciseForm));
+      const _id = formData.get('_id');
+      formData.delete('_id');
+      const res = await fetch(`/api/users/${_id}/exercises`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      document.getElementById('exercise-response').textContent = JSON.stringify(data, null, 2);
+    };
+
+    logForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const _id = logForm._id.value;
+      const query = new URLSearchParams();
+      if (logForm.from.value) query.append('from', logForm.from.value);
+      if (logForm.to.value) query.append('to', logForm.to.value);
+      if (logForm.limit.value) query.append('limit', logForm.limit.value);
+
+      const res = await fetch(`/api/users/${_id}/logs?${query.toString()}`);
+      const data = await res.json();
+      document.getElementById('log-response').textContent = JSON.stringify(data, null, 2);
+    };
+  </script>
+</body>
+</html>
